@@ -2,6 +2,7 @@
 #include <limine.h>
 #include <dev/tty.h>
 #include <sys/log.h>
+#include <arch/arch.h>
 
 __attribute__((used, section(".requests_start_marker")))
 static volatile LIMINE_REQUESTS_START_MARKER;
@@ -16,12 +17,11 @@ void kmain_x86_64()
 
     logln(info, "kernel", "Soaplin v0.1 - Zephyr (Milestone 1)\n");
 
-    logln(info, "kernel", "Hello logger! %x\n", 0x10);
-    logln(warn, "kernel", "Hello logger! %x\n", 0x10);
-    logln(panic, "kernel", "Hello logger! %x\n", 0x10);
-    logln(err, "kernel", "Hello logger! %x\n", 0x10);
-    logln(progress, "kernel", "Hello logger! %x\n", 0x10);
+    arch_init_stage1();
 
+    //asm("int $3");
+
+    // The kernel finished it's boot things. Now halt the machine. Interrupts will still be received & handled.
     while (1)
-        ;;
+        asm("hlt");
 }

@@ -12,6 +12,8 @@
         "serio.h": "c",
         "stdarg.h": "c",
         "log.h": "c",
-        "fb.h": "c"
+        "fb.h": "c",
+        "gdt.h": "c",
+        "_arch.h": "c"
     }
 }
