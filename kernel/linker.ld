@@ -34,7 +34,7 @@ SECTIONS
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     text_start_ld = .;
-    .text : {
+    .text BLOCK(4K) : ALIGN(4K) {
         *(.text .text.*)
     } :text
     text_end_ld = .;
@@ -43,7 +43,7 @@ SECTIONS
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     rodata_start_ld = .;
-    .rodata : {
+    .rodata BLOCK(4K) : ALIGN(4K) {
         *(.rodata .rodata.*)
     } :rodata
     rodata_end_ld = .;
@@ -52,7 +52,7 @@ SECTIONS
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     data_start_ld = .;
-    .data : {
+    .data BLOCK(4K) : ALIGN(4K) {
         *(.data .data.*)
     } :data
 
@@ -60,7 +60,7 @@ SECTIONS
     /* unnecessary zeros will be written to the binary. */
     /* If you need, for example, .init_array and .fini_array, those should be placed */
     /* above this. */
-    .bss : {
+    .bss BLOCK(4K) : ALIGN(4K) {
         *(.bss .bss.*)
         *(COMMON)
     } :data

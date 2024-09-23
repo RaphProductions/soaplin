@@ -14,6 +14,7 @@
         "log.h": "c",
         "fb.h": "c",
         "gdt.h": "c",
-        "_arch.h": "c"
+        "_arch.h": "c",
+        "vmm.h": "c"
     }
 }

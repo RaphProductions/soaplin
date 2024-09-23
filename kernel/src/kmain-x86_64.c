@@ -1,23 +1,22 @@
 #include <dev/serio.h>
-#include <limine.h>
 #include <dev/tty.h>
 #include <sys/log.h>
 #include <arch/arch.h>
-
-__attribute__((used, section(".requests_start_marker")))
-static volatile LIMINE_REQUESTS_START_MARKER;
-
-__attribute__((used, section(".requests_end_marker")))
-static volatile LIMINE_REQUESTS_END_MARKER;
+#include <boot/limine.h>
+#include <mm/pmm.h>
+#include <mm/vmm.h>
 
 void kmain_x86_64()
 {
+    limine_populate();
     serio_init();
     tty_enable();
 
     logln(info, "kernel", "Soaplin v0.1 - Zephyr (Milestone 1)\n");
 
     arch_init_stage1();
+    pmm_init();
+    vmm_init();
 
     //asm("int $3");
 

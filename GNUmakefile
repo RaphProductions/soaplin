@@ -30,7 +30,7 @@ int: $(IMAGE_NAME).iso
 		-M q35 \
 		-cdrom $(IMAGE_NAME).iso \
 		-boot d \
-		$(QEMUFLAGS) -d int
+		$(QEMUFLAGS) -d int -M smm=off -no-reboot -no-shutdown
 
 .PHONY: run
 run: $(IMAGE_NAME).iso
