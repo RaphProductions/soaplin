@@ -1,3 +1,6 @@
+// Copyright (C) 2024 Sipaa Projects
+// This code is part of the Soaplin kernel and is licensed under the terms of the MIT License.
+
 #include <dev/tty.h>
 #include <sys/log.h>
 #include <stdint.h>
@@ -5,6 +8,7 @@
 #include <tpf/npf.h>
 #include <sys/string.h>
 #include <dev/serio.h>
+#include <core/lock/spinlock.h>
 
 uint32_t fg_lt[] = {
     0xf7d514,
@@ -22,8 +26,12 @@ char *nm_lt[] = {
     "progress"
 };
 
+spinlock sp = 1;
+
 void logln(logtype lt, char *cmp, char *msg, ...)
 {
+    spinlock_acquire(&sp); // We need to have a spinlock to prevent the logger from breaking
+
     tty_printf("%s - ", cmp);
     tty_set_fg(fg_lt[lt]);
     tty_printf(nm_lt[lt]);
@@ -44,4 +52,6 @@ void logln(logtype lt, char *cmp, char *msg, ...)
     int i = strlen(buf);
     tty_print(buf, i);
     serio_print(buf, i);
+
+    spinlock_release(&sp);
 }

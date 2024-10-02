@@ -1,11 +1,11 @@
+// Copyright (C) 2024 Sipaa Projects
+// This code is part of the Soaplin kernel and is licensed under the terms of the MIT License.
+
 #pragma once
 
 #include <stdint.h>
 #include <stddef.h>
 #include <mm/pmm.h>
-
-extern uint64_t *vmm_kernel_address_space;
-extern uint64_t *vmm_current_address_space;
 
 #define PTE_ADDR_MASK 0x000ffffffffff000
 #define PTE_GET_ADDR(VALUE) ((VALUE) & PTE_ADDR_MASK)
@@ -56,7 +56,11 @@ typedef struct pagemap {
 #define VMM_GLOBAL 0x100
 #define VMM_EXECUTE 0x200
 
+extern pagemap *vmm_kernel_pagemap;
+extern pagemap *vmm_current_pagemap;
+
 void vmm_init();
 pagemap *vmm_new_pagemap();
 void vmm_load_pagemap(pagemap *pm);
 void vmm_map(pagemap *pm, uint64_t vaddr, uint64_t paddr, uint64_t flags);
+void vmm_unmap(pagemap *pm, uint64_t vaddr);

@@ -1,3 +1,6 @@
+// Copyright (C) 2024 Sipaa Projects
+// This code is part of the Soaplin kernel and is licensed under the terms of the MIT License.
+
 #ifdef __x86_64__
 
 #include <arch/x86_64/gdt.h>

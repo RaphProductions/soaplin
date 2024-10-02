@@ -2,9 +2,12 @@
 #include <tpf/flanterm/flanterm.h>
 #include <tpf/flanterm/backends/fb.h>
 #include <sys/string.h>
+// Copyright (C) 2024 Sipaa Projects
+// This code is part of the Soaplin kernel and is licensed under the terms of the MIT License.
+
 #include <stdarg.h>
 
-static struct flanterm_context *ftctx;
+static struct flanterm_fb_context *ftctx;
 bool tty_enabled = false;
 
 unsigned char font[];
@@ -40,8 +43,22 @@ void tty_enable()
         );
     }
 
-    ftctx->clear(ftctx, true);
+    ftctx->term.clear(ftctx, true);
     tty_enabled = true;
+}
+
+void tty_clear()
+{
+    ftctx->term.clear(ftctx, true);
+}
+
+void tty_set_margin(int margin)
+{
+    ftctx->term.cols = (ftctx->width - margin * 2) / ftctx->glyph_width;
+    ftctx->term.rows = (ftctx->height - margin * 2) / ftctx->glyph_height;
+
+    ftctx->offset_x = margin + ((ftctx->width - margin * 2) % ftctx->glyph_width) / 2;
+    ftctx->offset_y = margin + ((ftctx->height - margin * 2) % ftctx->glyph_height) / 2;
 }
 
 void tty_set_fg(uint32_t fg)
@@ -50,7 +67,7 @@ void tty_set_fg(uint32_t fg)
         return;
 
     _fg = fg;
-    ftctx->set_text_fg_rgb(ftctx, fg);
+    ftctx->term.set_text_fg_rgb(ftctx, fg);
 }
 
 void tty_set_bg(uint32_t bg)
@@ -59,7 +76,7 @@ void tty_set_bg(uint32_t bg)
         return;
 
     _bg = bg;
-    ftctx->set_text_bg_rgb(ftctx, bg);
+    ftctx->term.set_text_bg_rgb(ftctx, bg);
 }
 
 void tty_reset_col()
@@ -67,8 +84,8 @@ void tty_reset_col()
     if (!tty_enabled)
         return;
 
-    ftctx->set_text_bg_default(ftctx);
-    ftctx->set_text_fg_default(ftctx);
+    ftctx->term.set_text_bg_default(ftctx);
+    ftctx->term.set_text_fg_default(ftctx);
 }
 
 void tty_disable()

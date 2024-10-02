@@ -12,15 +12,21 @@ void kmain_x86_64()
     serio_init();
     tty_enable();
 
-    logln(info, "kernel", "Soaplin v0.1 - Zephyr (Milestone 1)\n");
-
+    //logln(info, "kernel", "Soaplin v0.1 - Zephyr (Milestone 1)\n");
+    
     arch_init_stage1();
+
     pmm_init();
     vmm_init();
+    logln(progress, "kernel", "Memory management initialized\n");
 
-    //asm("int $3");
+    __asm__ volatile("int $3");
+
+    arch_init_stage2();
+
+    logln(info, "kernel", "The kernel booted successfully.\n");
 
     // The kernel finished it's boot things. Now halt the machine. Interrupts will still be received & handled.
     while (1)
-        asm("hlt");
+        __asm__ volatile("hlt");
 }

@@ -1,12 +1,10 @@
-/* Tell the linker that we want an x86_64 ELF64 output file */
+/* Copyright (C) 2024 Sipaa Projects
+   This code is part of the Soaplin kernel and is licensed under the terms of the MIT License. */
+
 OUTPUT_FORMAT(elf64-x86-64)
 
-/* We want the symbol kmain to be our entry point */
 ENTRY(kmain_x86_64)
 
-/* Define the program headers we want so the bootloader gives us the right */
-/* MMU permissions; this also allows us to exert more control over the linking */
-/* process. */
 PHDRS
 {
     requests PT_LOAD;
@@ -17,20 +15,14 @@ PHDRS
 
 SECTIONS
 {
-    /* We want to be placed in the topmost 2GiB of the address space, for optimisations */
-    /* and because that is what the Limine spec mandates. */
-    /* Any address in this region will do, but often 0xffffffff80000000 is chosen as */
-    /* that is the beginning of the region. */
     . = 0xffffffff80000000;
 
-    /* Define a section to contain the Limine requests and assign it to its own PHDR */
     .requests : {
         KEEP(*(.requests_start_marker))
         KEEP(*(.requests))
         KEEP(*(.requests_end_marker))
     } :requests
 
-    /* Move to the next memory page for .text */
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     text_start_ld = .;
@@ -39,7 +31,7 @@ SECTIONS
     } :text
     text_end_ld = .;
 
-    /* Move to the next memory page for .rodata */
+
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     rodata_start_ld = .;
@@ -48,7 +40,7 @@ SECTIONS
     } :rodata
     rodata_end_ld = .;
 
-    /* Move to the next memory page for .data */
+
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     data_start_ld = .;
@@ -56,17 +48,14 @@ SECTIONS
         *(.data .data.*)
     } :data
 
-    /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
-    /* unnecessary zeros will be written to the binary. */
-    /* If you need, for example, .init_array and .fini_array, those should be placed */
-    /* above this. */
+
     .bss BLOCK(4K) : ALIGN(4K) {
         *(.bss .bss.*)
         *(COMMON)
     } :data
     data_end_ld = .;
 
-    /* Discard .note.* and .eh_frame* since they may cause issues on some hosts. */
+
     /DISCARD/ : {
         *(.eh_frame*)
         *(.note .note.*)

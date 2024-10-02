@@ -1,8 +1,12 @@
+// Copyright (C) 2024 Sipaa Projects
+// This code is part of the Soaplin kernel and is licensed under the terms of the MIT License.
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <sys/log.h>
 #include <arch/arch.h>
 #include <arch/x86_64/pic.h>
+#include <sys/panic.h>
 
 typedef struct {
 	uint16_t    isr_low;      // The lower 16 bits of the ISR's address
@@ -34,11 +38,13 @@ void interrupt_handler(stackframe *sf) {
         // the process that caused the exception and do as nothing
         // happened.
 
-        logln(panic, "kernel", "*soaplin dies*\n");
-        __asm__ volatile ("cli; hlt");
+        panic();
     }
-
-    logln(info, "arch/ints", "PIC IRQ number %d!\n", sf->vector);
+    else if (sf->vector == 32)
+    {
+        schedule(sf);
+    }
+    
     pic_ack(sf->vector - 32);
 }
 

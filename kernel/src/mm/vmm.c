@@ -1,3 +1,6 @@
+// Copyright (C) 2024 Sipaa Projects
+// This code is part of the Soaplin kernel and is licensed under the terms of the MIT License.
+
 #include <mm/vmm.h>
 #include <sys/log.h>
 
@@ -58,7 +61,7 @@ void vmm_init()
 	}
 
 	vmm_load_pagemap(vmm_kernel_pagemap);
-	logln(info, "vmm", "Initialized!\n");
+	logln(progress, "vmm", "Initialized!\n");
 }
 
 pagemap *vmm_new_pagemap()
@@ -128,4 +131,18 @@ void vmm_map(pagemap *pm, uint64_t vaddr, uint64_t paddr, uint64_t flags)
 	uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry);
 
 	pml1[pml1_entry] = paddr | flags;
+}
+
+void vmm_unmap(pagemap *pm, uint64_t vaddr)
+{
+	uint64_t pml1_entry = (vaddr >> 12) & 0x1ff;
+	uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
+	uint64_t pml3_entry = (vaddr >> 30) & 0x1ff;
+	uint64_t pml4_entry = (vaddr >> 39) & 0x1ff;
+
+	uint64_t *pml3 = __vmm_get_next_lvl(pm->topLevel, pml4_entry);
+	uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry);
+	uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry);
+
+	pml1[pml1_entry] = 0;
 }
