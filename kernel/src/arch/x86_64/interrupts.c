@@ -38,7 +38,7 @@ void interrupt_handler(stackframe *sf) {
         // the process that caused the exception and do as nothing
         // happened.
 
-        panic();
+        panic(KMODE_CPU_EXCEPTION, &sf->vector);
     }
     else if (sf->vector == 32)
     {

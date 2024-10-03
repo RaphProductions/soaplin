@@ -20,7 +20,7 @@ void kmain_x86_64()
     vmm_init();
     logln(progress, "kernel", "Memory management initialized\n");
 
-    __asm__ volatile("int $3");
+    //__asm__ volatile("int $3");
 
     arch_init_stage2();
 
