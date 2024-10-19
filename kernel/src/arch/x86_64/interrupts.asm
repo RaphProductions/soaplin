@@ -1,3 +1,5 @@
+[bits 64]
+
 extern interrupt_handler
 %macro PUSHALL 0
     push rax
@@ -75,6 +77,7 @@ isr_stub_%+%1:
     iretq
 %endmacro
 
+section .text
 isr_no_err_stub 0
 isr_no_err_stub 1
 isr_no_err_stub 2

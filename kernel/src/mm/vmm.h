@@ -1,11 +1,12 @@
 // Copyright (C) 2024 Sipaa Projects
-// This code is part of the Soaplin kernel and is licensed under the terms of the MIT License.
+// This code is part of the Soaplin kernel and is licensed under the terms of
+// the MIT License.
 
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
 #include <mm/pmm.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #define PTE_ADDR_MASK 0x000ffffffffff000
 #define PTE_GET_ADDR(VALUE) ((VALUE) & PTE_ADDR_MASK)
@@ -13,10 +14,10 @@
 
 extern uint64_t hhdm_off;
 extern uint64_t kernel_phys_addr;
-extern uint64_t kernel_virt_addr; 
+extern uint64_t kernel_virt_addr;
 
-#define PHYSICAL_TO_VIRTUAL(ptr) ((void*)((uint64_t)ptr) + hhdm_off)
-#define VIRTUAL_TO_PHYSICAL(ptr) ((void*)((uint64_t)ptr) - hhdm_off)
+#define PHYSICAL_TO_VIRTUAL(ptr) ((void *)((uint64_t)ptr) + hhdm_off)
+#define VIRTUAL_TO_PHYSICAL(ptr) ((void *)((uint64_t)ptr) - hhdm_off)
 
 typedef char SymbolT[];
 
@@ -30,19 +31,19 @@ extern SymbolT data_start_ld;
 extern SymbolT data_end_ld;
 
 typedef struct vma_region {
-	uint64_t virtualAddr;
-	uint64_t end;
-	uint64_t pages;
-	uint64_t flags;
-	uint64_t physicalAddr;
-	uint64_t refCount;
-	struct vma_region *next;
-	struct vma_region *prev;
+  uint64_t virtualAddr;
+  uint64_t end;
+  uint64_t pages;
+  uint64_t flags;
+  uint64_t physicalAddr;
+  uint64_t refCount;
+  struct vma_region *next;
+  struct vma_region *prev;
 } __attribute__((packed)) vma_region;
 
 typedef struct pagemap {
-	uint64_t *topLevel;
-	vma_region *vmaHead;
+  uint64_t *topLevel;
+  vma_region *vmaHead;
 } __attribute__((packed)) pagemap;
 
 #define VMM_PRESENT 0x01

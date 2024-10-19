@@ -6,6 +6,11 @@ You are free to use it as it uses the MIT License.
 * x86_64 architecture implementation (GDT / TSS / legacy PIC / interrupts)
 * Memory management (basic memops / PMM / VMM)
 
+### Broken
+* Scheduler
+* Spinlocks
+
+
 ## Objectives
 * Be able to run a small Linux userspace (a libc & busybox)
 

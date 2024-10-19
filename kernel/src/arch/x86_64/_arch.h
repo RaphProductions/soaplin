@@ -1,14 +1,15 @@
 // Copyright (C) 2024 Sipaa Projects
-// This code is part of the Soaplin kernel and is licensed under the terms of the MIT License.
+// This code is part of the Soaplin kernel and is licensed under the terms of
+// the MIT License.
 
 #pragma once
 
 #include <stdint.h>
 
 typedef struct {
-  //uint64_t ds;
-  //uint64_t cr2;
-  //uint64_t cr3;
+  // uint64_t ds;
+  // uint64_t cr2;
+  // uint64_t cr3;
 
   uint64_t r15;
   uint64_t r14;

@@ -1,5 +1,6 @@
 // Copyright (C) 2024 Sipaa Projects
-// This code is part of the Soaplin kernel and is licensed under the terms of the MIT License.
+// This code is part of the Soaplin kernel and is licensed under the terms of
+// the MIT License.
 
 #pragma once
 
@@ -8,14 +9,13 @@
 
 #define PROCESS_NAME_SIZE 128
 
-typedef struct process
-{
-    char name[PROCESS_NAME_SIZE];
-    stackframe regs;
-    uint64_t stack_ptr;
-    struct Process *next;
-    pagemap *pm;
-    int pid;
+typedef struct process {
+  char name[PROCESS_NAME_SIZE];
+  stackframe regs;
+  uint64_t stack_ptr;
+  struct process *next;
+  pagemap *pm;
+  int pid;
 } process;
 
 extern process *current_process;

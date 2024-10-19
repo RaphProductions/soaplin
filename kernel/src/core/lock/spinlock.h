@@ -1,9 +1,14 @@
 // Copyright (C) 2024 Sipaa Projects
-// This code is part of the Soaplin kernel and is licensed under the terms of the MIT License.
+// This code is part of the Soaplin kernel and is licensed under the terms of
+// the MIT License.
 
 #pragma once
 
-typedef int spinlock;
+#include <stdbool.h>
 
-void spinlock_acquire(spinlock *sp);
-void spinlock_release(spinlock *sp);
+typedef struct {
+  bool locked;
+} spinlock;
+
+void spinlock_acquire(spinlock* l);
+void spinlock_release(spinlock* l);
