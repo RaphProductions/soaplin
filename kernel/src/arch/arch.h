@@ -9,3 +9,5 @@
 void arch_init_stage1();
 
 void arch_init_stage2();
+
+void arch_init_fini();

@@ -22,6 +22,8 @@ typedef struct {
   uint8_t base2;
 } __attribute__((packed)) gdt_entry;
 
+#define GDT_GET_SEG(d) d * sizeof(gdt_entry)
+
 typedef struct {
   uint32_t reserved0;
   uint64_t rsp0;

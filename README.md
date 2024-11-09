@@ -4,15 +4,16 @@ You are free to use it as it uses the MIT License.
 
 ## Features
 * x86_64 architecture implementation (GDT / TSS / legacy PIC / interrupts)
-* Memory management (basic memops / PMM / VMM)
-
-### Broken
+* Memory management (basic memory operations / PMM / VMM)
 * Scheduler
 * Spinlocks
 
-
 ## Objectives
+* Run a small interpreter (Lua, Brainfuck...)
+
 * Be able to run a small Linux userspace (a libc & busybox)
+* Run DOOM
+* Watch Bad Apple
 
 ## Acknowledgements
 Soaplin in it's current state would not be possible without all

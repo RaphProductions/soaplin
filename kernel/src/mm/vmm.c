@@ -84,7 +84,7 @@ pagemap *vmm_new_pagemap() {
   memset(pageMap->topLevel, 0, PAGE_SIZE);
 
   pageMap->vmaHead = (vma_region *)PHYSICAL_TO_VIRTUAL(pmm_allocpage());
-  if (!pageMap->vmaHead) {
+  if (!pageMap->vmaHead) { 
     logln(err, "vmm", "Allocation failed!\n");
     pmm_freepage((uint64_t *)VIRTUAL_TO_PHYSICAL(pageMap->topLevel));
     pmm_freepage((uint64_t *)VIRTUAL_TO_PHYSICAL(pageMap));

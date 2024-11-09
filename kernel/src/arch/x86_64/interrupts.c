@@ -9,6 +9,7 @@
 #include <sys/log.h>
 #include <sys/panic.h>
 #include <core/sched.h>
+#include <core/syscall/syscalls.h>
 
 typedef struct {
   uint16_t isr_low;   // The lower 16 bits of the ISR's address
@@ -36,17 +37,43 @@ static bool vectors[IDT_MAX_DESCRIPTORS];
 extern void *isr_stub_table[];
 
 void interrupt_handler(stackframe *sf) {
+  asm("cli");
+
   if (sf->vector < 32) {
     // We got a CPU exception. For now, halt the kernel.
     // When we get a scheduler in user mode, we could kill
     // the process that caused the exception and do as nothing
     // happened.
 
+    if (vmm_current_pagemap != vmm_kernel_pagemap)
+    {
+      __asm__ volatile("mov %0, %%cr3" : : "r"(VIRTUAL_TO_PHYSICAL(vmm_kernel_pagemap->topLevel)) : "memory");
+      vmm_current_pagemap = vmm_kernel_pagemap;
+
+      //sched_kill(current_process);
+
+      logln(err, "arch/ints", "Process %d exited due to a Page Fault.\n");
+
+      schedule(sf);
+      goto finally;
+    }
+
     panic(KMODE_CPU_EXCEPTION, &sf->vector);
   } else if (sf->vector == 32) {
     schedule(sf);
+  } else if (sf->vector == 128) {
+    syscall_func syscallf = syscalls[sf->rax];
+    if (!syscallf)
+    {
+      logln(warn, "arch/ints", "No syscall with ID %d exists: ignoring.\n", sf->rax);
+      goto finally;
+    }
+
+    syscallf(sf);
   }
 
+finally:
+  asm("sti");
   pic_ack(sf->vector - 32);
 }
 

@@ -1,13 +1,13 @@
+// Copyright (C) 2024 Sipaa Projects
+// This code is part of the Soaplin kernel and is licensed under the terms of
+// the MIT License.
+
 #include <dev/fb.h>
 #include <sys/string.h>
 #include <tpf/flanterm/backends/fb.h>
 #include <tpf/flanterm/flanterm.h>
 #include <tpf/npf.h>
-
-// Copyright (C) 2024 Sipaa Projects
-// This code is part of the Soaplin kernel and is licensed under the terms of
-// the MIT License.
-
+#include <core/lock/spinlock.h>
 #include <stdarg.h>
 
 static struct flanterm_fb_context *ftctx;
@@ -23,7 +23,11 @@ static uint32_t _def_fg = 0xFFFFFF;
 static uint32_t _bg = 0x080808;
 static uint32_t _fg = 0xFFFFFF;
 
+static spinlock tty_lock;
+
 void tty_enable() {
+  spinlock_acquire(&tty_lock);
+
   if (tty_enabled)
     return;
 
@@ -43,11 +47,19 @@ void tty_enable() {
 
   ftctx->term.clear((struct flanterm_context*)ftctx, true);
   tty_enabled = true;
+
+  spinlock_release(&tty_lock);
 }
 
-void tty_clear() { ftctx->term.clear((struct flanterm_context*)ftctx, true); }
+void tty_clear() {
+  spinlock_acquire(&tty_lock);
+  ftctx->term.clear((struct flanterm_context*)ftctx, true);
+  spinlock_release(&tty_lock);
+}
 
 void tty_set_margin(int margin) {
+  spinlock_acquire(&tty_lock);
+
   ftctx->term.cols = (ftctx->width - margin * 2) / ftctx->glyph_width;
   ftctx->term.rows = (ftctx->height - margin * 2) / ftctx->glyph_height;
 
@@ -55,45 +67,63 @@ void tty_set_margin(int margin) {
       margin + ((ftctx->width - margin * 2) % ftctx->glyph_width) / 2;
   ftctx->offset_y =
       margin + ((ftctx->height - margin * 2) % ftctx->glyph_height) / 2;
+  spinlock_release(&tty_lock);
 }
 
 void tty_set_fg(uint32_t fg) {
+  spinlock_acquire(&tty_lock);
+
   if (!tty_enabled)
     return;
 
   _fg = fg;
   ftctx->term.set_text_fg_rgb((struct flanterm_context*)ftctx, fg);
+  spinlock_release(&tty_lock);
 }
 
 void tty_set_bg(uint32_t bg) {
+  spinlock_acquire(&tty_lock);
+
   if (!tty_enabled)
     return;
 
   _bg = bg;
   ftctx->term.set_text_bg_rgb((struct flanterm_context*)ftctx, bg);
+  spinlock_release(&tty_lock);
 }
 
 void tty_reset_col() {
+  spinlock_acquire(&tty_lock);
+
   if (!tty_enabled)
     return;
 
   ftctx->term.set_text_bg_default((struct flanterm_context*)ftctx);
   ftctx->term.set_text_fg_default((struct flanterm_context*)ftctx);
+  spinlock_release(&tty_lock);
 }
 
 void tty_disable() {
+  spinlock_acquire(&tty_lock);
+
   if (!tty_enabled)
     return;
   tty_enabled = false;
+  spinlock_release(&tty_lock);
 }
 
 void tty_print(char *str, size_t len) {
+  spinlock_acquire(&tty_lock);
+
   if (!tty_enabled)
     return;
   flanterm_write((struct flanterm_context*)ftctx, str, len);
+  spinlock_release(&tty_lock);
 }
 
 void tty_printf(char *format, ...) {
+  // We don't put a lock here, or we would get a deadlock.
+
   if (!tty_enabled)
     return;
   char buf[2048];

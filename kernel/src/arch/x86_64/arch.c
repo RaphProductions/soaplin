@@ -18,6 +18,9 @@ void arch_init_stage1() {
 void arch_init_stage2() {
   pit_init(1000);
   sched_init();
-  pit_enable();
   logln(progress, "arch", "Stage 2 initialization complete\n");
+}
+
+void arch_init_fini() {
+  pit_enable();
 }

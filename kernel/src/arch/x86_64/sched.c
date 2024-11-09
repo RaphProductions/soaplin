@@ -2,106 +2,137 @@
 // This code is part of the Soaplin kernel and is licensed under the terms of
 // the MIT License.
 
+#include "mm/pmm.h"
+#include "sys/log.h"
+#include <stdint.h>
 #ifdef __x86_64__
 
 #include <core/sched.h>
-#include <sys/log.h>
 #include <mm/memop.h>
 #include <sys/string.h>
 
-uint64_t pid_counter = 0;
-process *current_process = NULL;
-process *process_list = NULL;
-process *idle_process = NULL;
+sched_process *sched_processes_list;
+sched_process *sched_current_process;
+sched_thread *sched_current_thread;
+size_t next_free_pid = 0;
 
-int sched_idle() {
-  logln(info, "idle", "Hello!\n");
+static sched_process *idle_process;
+static uint64_t sched_alloc_stack() { return (uint64_t)pmm_alloc(4096) + 4095; }
 
-  while (1)
+static void sched_idle() {
+  while (true)
     ;
   ;
-
-  return 0;
 }
 
 void sched_init() {
-  current_process = (process *)pmm_alloc(sizeof(process));
-  memcpy(current_process->name, "system", PROCESS_NAME_SIZE);
-  current_process->pm = NULL;//vmm_new_pagemap();
-  current_process->next = current_process;
-  current_process->pid = -1;
-  process_list = current_process;
+  sched_current_process = (sched_process *)pmm_alloc(sizeof(sched_process));
 
-  sched_new("idle", sched_idle);
+  memcpy(sched_current_process->name, "kernel", strlen("kernel"));
+  sched_current_process->pid = -1;
+  sched_current_process->next = NULL;
+  sched_processes_list = sched_current_process;
+
+  sched_current_thread = (sched_thread *)pmm_alloc(sizeof(sched_thread));
+
+  memcpy(sched_current_thread->name, "kernel", strlen("kernel"));
+  sched_current_thread->tid = -1;
+  sched_current_thread->next = NULL;
+  sched_current_process->threads = sched_current_thread;
+
+  idle_process = sched_new("idle");
+  sched_new_thread(idle_process, "idle", sched_idle);
 }
 
-void __sched_entry(int (*entry)()) // Todo: this should be handled by the LibC
-{
-  // Having a "bootstrapper" is necessary since most of programs are exiting by
-  // returning. This handles the situation.
-  int result = entry();
-  logln(info, "sched", "Process %d exited with exit code %d!\n",
-        current_process->pid, result);
+size_t next_thread_id = 0;
 
-  sched_kill(current_process);
-  __asm__ volatile("int $32");
-}
-
-process *sched_new(char *name, int (*entry_point)()) {
-  process *new_proc = (process *)pmm_alloc(sizeof(process));
-  memcpy(new_proc->name, name, PROCESS_NAME_SIZE);
-  new_proc->stack_ptr = (uint64_t)pmm_alloc(4096) + 4095;
-  new_proc->pm = NULL; vmm_new_pagemap();
-  new_proc->pid = pid_counter;
-
-  new_proc->regs.rip = (uint64_t)__sched_entry;
-  new_proc->regs.rdi = (uint64_t)entry_point;
-  new_proc->regs.cs = 0x08;
-  new_proc->regs.rflags = 0x202;
-  new_proc->regs.rsp = new_proc->stack_ptr;
-  new_proc->regs.ss = 0x10;
-
-  new_proc->next = process_list->next;
-  process_list->next = new_proc;
-
-  pid_counter++;
-
-  logln(info, "sched",
-        "created process \"%s\": PID: %d, RIP: %p, Pagemap: %p%s\n",
-        new_proc->name, new_proc->pid, new_proc->regs.rip, new_proc->pm,
-        new_proc->pm ? "" : " (kernel mode)");
-
-  return new_proc;
-}
-
-void sched_kill(process *proc) {
-  process *prev_proc = process_list;
-
-  while (prev_proc->next != proc) {
-    prev_proc = prev_proc->next;
+sched_thread *sched_new_thread(sched_process *proc, char *name,
+                               void (*function)()) {
+  sched_thread *thread = (sched_thread *)pmm_alloc(sizeof(sched_thread));
+  if (proc->threads == NULL)
+    proc->threads = thread;
+  else {
+    for (sched_thread *scan = proc->threads; scan != NULL; scan = scan->next) {
+      if (scan->next != NULL)
+        continue;
+      scan->next = thread;
+      break;
+    }
   }
 
-  prev_proc->next = proc->next;
+  int len = strlen(name);
+  memcpy(thread->name, name, len >= 100 ? 100 : len);
 
-  pmm_free((void *)proc->stack_ptr - 4095);
-  pmm_free(proc);
+  thread->parent = proc;
+  thread->tid = next_thread_id++;
+  thread->status = READY;
+  thread->next = NULL;
+  thread->context.ss = 0x10;
+  thread->context.rsp = sched_alloc_stack();
+  thread->context.rflags = 0x202;
+  thread->context.cs = 0x08;
+  thread->context.rip = (uint64_t)function;
+  thread->context.rbp = 0;
+
+  logln(info, "sched", "new thread %d\n", thread->tid);
+
+  return thread;
 }
 
-extern void sched_ctxswitch(stackframe *regs);
+sched_process *sched_new(char *name) {
+  sched_process *process = (sched_process *)pmm_alloc(sizeof(sched_process));
 
-void schedule(stackframe *regs) {
-  memcpy(&current_process->regs, regs, sizeof(stackframe));
+  int len = strlen(name);
+  memcpy(process->name, name, len >= 100 ? 100 : len);
+  process->pid = next_free_pid++;
+  process->threads = NULL;
+  process->next = NULL;
 
-  current_process = current_process->next;
-  if (current_process->pm) {
-    logln(info, "sched", "case 1 - pid %d\n", current_process->pid);
-    vmm_load_pagemap(current_process->pm);
-  } else {
-    vmm_load_pagemap(vmm_kernel_pagemap);
+  sched_current_process->next = process;
+
+  return process;
+}
+
+void schedule(stackframe *sf) {
+  sched_process *prev_process;
+  sched_thread *prev_thread;
+
+  memcpy(&sched_current_thread->context, sf, sizeof(stackframe));
+  sched_current_thread->status = READY;
+
+  while (1) {
+    prev_process = sched_current_process;
+    prev_thread = sched_current_thread;
+
+    if (sched_current_process->next != NULL) {
+      sched_current_process = sched_current_process->next;
+    } else {
+      sched_current_process = sched_processes_list;
+    }
+
+    sched_current_thread = sched_current_process->threads;
+
+    while (sched_current_thread != NULL) {
+      if (sched_current_thread->status == DEAD) {
+        sched_current_thread = sched_current_thread->next;
+        continue;
+      }
+
+      sched_current_thread->status = RUNNING;
+      break;
+    }
+
+    if (sched_current_thread != NULL &&
+        sched_current_thread->status == RUNNING) {
+      break;
+    }
   }
 
-  memcpy(regs, &current_process->regs, sizeof(stackframe));
-  // sched_ctxswitch(regs);
+  //logln(info, "sched", "choosed thread %d from process %s %d\n",
+  //      sched_current_thread->tid, sched_current_process->name,
+  //      sched_current_process->pid);
+
+  memcpy(sf, &sched_current_thread->context, sizeof(stackframe));
 }
 
 #endif

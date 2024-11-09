@@ -25,6 +25,9 @@
         "string": "c",
         "unordered_map": "c",
         "vector": "c",
-        "system_error": "c"
+        "system_error": "c",
+        "syscalls.h": "c",
+        "numbers": "c",
+        "panic.h": "c"
     }
 }

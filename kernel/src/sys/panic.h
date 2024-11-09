@@ -6,5 +6,8 @@
 
 #define UNKNOWN 0
 #define KMODE_CPU_EXCEPTION 1
+#define DEADLOCKED_KERNEL_COMPONENT 2
+
+#define MAX 2
 
 void panic(int cause, void *args);
