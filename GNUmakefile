@@ -125,3 +125,4 @@ clean:
 distclean: clean
 	$(MAKE) -C kernel distclean
 	rm -rf kernel-deps limine ovmf
+	rm -rf .* compile_commands.json
