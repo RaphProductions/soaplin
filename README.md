@@ -1,3 +1,6 @@
+### Warning
+A fresh new Soaplin Zephyr rewrite is ongoing on the `zephyr-rewrite` branch. This old version of the kernel is kept only for posterity.
+
 # Soaplin
 Soaplin is an operating system kernel for the x86_64 architecture, meant to be used on Project Jupiter. 
 You are free to use it as it uses the MIT License.
