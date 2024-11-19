@@ -75,6 +75,7 @@ override KCFLAGS += \
 override KCPPFLAGS := \
     -I src \
     -isystem freestnd-c-hdrs-0bsd \
+    -I src/tpf/uacpi/include \
     $(KCPPFLAGS) \
     -MMD \
     -MP

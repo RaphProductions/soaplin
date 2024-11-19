@@ -3,6 +3,10 @@
 
 uint32_t* fb;
 
+// yes i made it using chatgpt :()
+// i'm not really a pro in high-level graphics,
+// and this is just a test program to test the kernel APIs...
+
 #define FIXED_POINT_SCALE 256
 #define PROJECTION_FACTOR (200 * FIXED_POINT_SCALE)
 #define MAX_DEPTH 1000

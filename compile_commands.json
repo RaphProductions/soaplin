@@ -28,14 +28,16 @@
       "src",
       "-isystem",
       "freestnd-c-hdrs-0bsd",
+      "-I",
+      "src/tpf/uacpi/include",
       "-c",
       "-o",
-      "obj/kmain-x86_64.c.o",
-      "src/kmain-x86_64.c"
+      "obj/dev/serio.c.o",
+      "src/dev/serio.c"
     ],
     "directory": "/home/raphm/Projects/soaplin/kernel",
-    "file": "/home/raphm/Projects/soaplin/kernel/src/kmain-x86_64.c",
-    "output": "/home/raphm/Projects/soaplin/kernel/obj/kmain-x86_64.c.o"
+    "file": "/home/raphm/Projects/soaplin/kernel/src/dev/serio.c",
+    "output": "/home/raphm/Projects/soaplin/kernel/obj/dev/serio.c.o"
   },
   {
     "arguments": [
@@ -66,13 +68,55 @@
       "src",
       "-isystem",
       "freestnd-c-hdrs-0bsd",
+      "-I",
+      "src/tpf/uacpi/include",
       "-c",
       "-o",
-      "obj/test/soaplin_starssc.c.o",
-      "src/test/soaplin_starssc.c"
+      "obj/sys/arch/x86_64/idt.c.o",
+      "src/sys/arch/x86_64/idt.c"
     ],
     "directory": "/home/raphm/Projects/soaplin/kernel",
-    "file": "/home/raphm/Projects/soaplin/kernel/src/test/soaplin_starssc.c",
-    "output": "/home/raphm/Projects/soaplin/kernel/obj/test/soaplin_starssc.c.o"
+    "file": "/home/raphm/Projects/soaplin/kernel/src/sys/arch/x86_64/idt.c",
+    "output": "/home/raphm/Projects/soaplin/kernel/obj/sys/arch/x86_64/idt.c.o"
+  },
+  {
+    "arguments": [
+      "/usr/lib64/ccache/cc",
+      "-g",
+      "-O2",
+      "-pipe",
+      "-Wall",
+      "-Wextra",
+      "-std=gnu11",
+      "-nostdinc",
+      "-ffreestanding",
+      "-fno-stack-protector",
+      "-fno-stack-check",
+      "-fno-lto",
+      "-fno-PIC",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-m64",
+      "-march=x86-64",
+      "-mno-80387",
+      "-mno-mmx",
+      "-mno-sse",
+      "-mno-sse2",
+      "-mno-red-zone",
+      "-mcmodel=kernel",
+      "-I",
+      "src",
+      "-isystem",
+      "freestnd-c-hdrs-0bsd",
+      "-I",
+      "src/tpf/uacpi/include",
+      "-c",
+      "-o",
+      "obj/sys/arch/x86_64/interrupts.c.o",
+      "src/sys/arch/x86_64/interrupts.c"
+    ],
+    "directory": "/home/raphm/Projects/soaplin/kernel",
+    "file": "/home/raphm/Projects/soaplin/kernel/src/sys/arch/x86_64/interrupts.c",
+    "output": "/home/raphm/Projects/soaplin/kernel/obj/sys/arch/x86_64/interrupts.c.o"
   }
 ]

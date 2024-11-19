@@ -1,5 +1,6 @@
-#pragma include
+#pragma once
 
+#include "limine.h"
 #include <stdint.h>
 
 typedef struct {
@@ -20,3 +21,6 @@ typedef struct {
     fb_colormask green_mask;
     fb_colormask blue_mask;
 } framebuffer;
+
+framebuffer *fb_get(int num);
+struct limine_framebuffer *fb_get_limine(int num);
