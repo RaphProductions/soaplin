@@ -6,12 +6,14 @@
 #include <sys/acpi.h>
 #include <sys/arch/x86_64/gdt.h>
 #include <sys/arch/x86_64/idt.h>
+#include "mm/vmm.h"
 #include "sys/acpi/madt.h"
 #include "sys/arch/x86_64/pic.h"
 #include "sys/log.h"
 #include <dev/fb.h>
 #include <dev/tty.h>
 #include <stdint.h>
+#include <mm/pmm.h>
 
 __attribute__((used, section(".limine_requests_start")))
 static volatile LIMINE_REQUESTS_START_MARKER;
@@ -39,6 +41,9 @@ void kmain_x86_64() {
     else
         pic_init();
     pic_unmask_irq(1);
+
+    pmm_init();
+    vmm_init();
 
     //asm("int $0x03");
     starssc(fb_get(0));
