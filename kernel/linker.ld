@@ -17,12 +17,16 @@ SECTIONS
 {
     . = 0xffffffff80000000;
 
+    reqs_start_ld = .;
+
     .requests : {
         KEEP(*(.requests_start_marker))
         KEEP(*(.requests))
         KEEP(*(.requests_end_marker))
     } :requests
 
+    reqs_end_ld = .;
+    
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     text_start_ld = .;
@@ -53,8 +57,8 @@ SECTIONS
         *(.bss .bss.*)
         *(COMMON)
     } :data
-    data_end_ld = .;
 
+    data_end_ld = .;
 
     /DISCARD/ : {
         *(.eh_frame*)

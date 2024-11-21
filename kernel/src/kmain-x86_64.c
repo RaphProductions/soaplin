@@ -15,16 +15,21 @@
 #include <stdint.h>
 #include <mm/pmm.h>
 
-__attribute__((used, section(".limine_requests_start")))
-static volatile LIMINE_REQUESTS_START_MARKER;
-
-__attribute__((used, section(".limine_requests_end")))
-static volatile LIMINE_REQUESTS_END_MARKER;
+__attribute__((used, section(".limine_requests")))       static volatile LIMINE_BASE_REVISION(0);
+__attribute__((used, section(".limine_requests_start"))) static volatile LIMINE_REQUESTS_START_MARKER;
+__attribute__((used, section(".limine_requests_end")))   static volatile LIMINE_REQUESTS_END_MARKER;
 
 extern void starssc(framebuffer *fb2);
 
 void kmain_x86_64() {
     serio_init();
+
+    if (!LIMINE_BASE_REVISION_SUPPORTED)
+    {
+        logln(panic_lg, "kernel", "Limine Base Revision is not supported.\n");
+        asm("cli; hlt;");
+    }
+
     tty_enable();
     tty_printf("Soaplin 0.1 Zephyr (zephyr_rewrite)\n");
     tty_printf("The kernel booted successfully! Wait a bit to get a cool screensaver!\n");

@@ -84,7 +84,7 @@ void pmm_init() {
         }
     }
 
-    stack.idx--; // There's a bug where the first page of the stack is 0x0. Ignore this "fake page".
+    stack.idx--;
 
     stack.max = stack.idx;
 
@@ -97,12 +97,12 @@ void pmm_init() {
 void pmm_dump() {
     logln(info, "pmm", "first 10 pages:\n");
     for (uint64_t i = stack.idx; i > (stack.idx - 10); i--) {
-        logln(info, "pmm", "  * %p\n", stack.pages[i]);
+        logln(info, "pmm", "  * %p (%d)\n", stack.pages[i], i);
     }
 
     logln(info, "pmm", "last 10 pages:\n");
     for (uint64_t i = 0; i < 10; i++) {
-        logln(info, "pmm", "  * %p\n", stack.pages[i]);
+        logln(info, "pmm", "  * %p (%d)\n", stack.pages[i], i);
     }
 }
 
@@ -112,12 +112,13 @@ void *pmm_request_page() {
         panic(out_of_memory, NULL);
     }
 
-    void *ptr = (void *)stack.pages[stack.idx--];
-    return (void*)HIGHER_HALF(ptr); // It's kind of idiot if it returned 0x0...
+    void *ptr = (void *)stack.pages[--stack.idx];
+    //logln(info, "pmm", "allocating page at %p\n", ptr);
+    return ptr;
 }
 
-void pmm_free_page(void **ptr) {
-    if (!ptr || !*ptr)
+void pmm_free_page(void *ptr) {
+    if (!ptr)
         return;
     
     if (stack.idx >= stack.max) {
@@ -125,5 +126,9 @@ void pmm_free_page(void **ptr) {
         return;
     }
 
-    stack.pages[stack.idx++] = (uint64_t)*ptr;
+    if ((uint64_t)ptr > pmm_hhdm_off) {
+        return;
+    } else {
+        stack.pages[stack.idx++] = (uint64_t)ptr;
+    }
 }
