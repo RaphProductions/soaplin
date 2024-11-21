@@ -8,7 +8,7 @@
 
 static volatile struct limine_paging_mode_request pmrq = {
     .id = LIMINE_PAGING_MODE_REQUEST,
-    .revision = 0,
+    .revision = 3,
     .mode = LIMINE_PAGING_MODE_X86_64_4LVL
 };
 
@@ -54,6 +54,10 @@ pagemap_t *vmm_alloc_pm() {
 }
 
 void vmm_init() {
+    if (pmrq.response->mode != LIMINE_PAGING_MODE_X86_64_4LVL) {
+        logln(panic_lg, "vmm", "Soaplin only supports 4-level paging!\n");
+        asm("cli; hlt;");
+    }
     vmm_kernel_pm = vmm_alloc_pm();
     vmm_kernel_pm_exists = 1;
 
@@ -111,16 +115,6 @@ void vmm_load_pagemap(pagemap_t *pm) {
     logln(progress, "vmm", "thing!\n");
     vmm_current_pm = pm;
     __asm__ volatile("mov %0, %%cr3" : : "r"(PHYSICAL(pm->toplevel)) : "memory");
-}
-
-static uint64_t *__vmm_get_next_lvl(uint64_t *level, uint64_t entry) {
-    if (level[entry] & 1)
-        return HIGHER_HALF(PTE_GET_ADDR(level[entry]));
-
-    uint64_t *pml = HIGHER_HALF(pmm_request_page());
-    memset(pml, 0, PMM_PAGE_SIZE);
-    level[entry] = (uint64_t)PHYSICAL(pml) | 1 | 2;
-    return pml;
 }
 
 void vmm_map(pagemap_t *pm, uint64_t vaddr, uint64_t paddr, uint64_t flags) {

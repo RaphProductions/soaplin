@@ -9,12 +9,13 @@
 #include <sys/string.h>
 
 // Kevin Alavik: Reference for implementing this PMM (https://github.com/kevinalavik/nekonix). Thanks :heart:
-
+__attribute__((used, section(".limine_requests"))) 
 static volatile struct limine_memmap_request memmap = {
     .id = LIMINE_MEMMAP_REQUEST,
     .revision = 0
 };
 
+__attribute__((used, section(".limine_requests"))) 
 static volatile struct limine_hhdm_request hhdm = {
     .id = LIMINE_HHDM_REQUEST,
     .revision = 0
@@ -39,6 +40,12 @@ void pmm_test() {
 }
 
 void pmm_init() {
+    if (!hhdm.response)
+    {
+        logln(panic_lg, "pmm", "HHDM request is NULL!\n");
+        asm("cli; hlt");
+    }
+
     uint64_t free_pages = 0;
     pmm_hhdm_off = hhdm.response->offset;
 
