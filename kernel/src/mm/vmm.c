@@ -87,17 +87,17 @@ void vmm_init() {
     logln(info, "vmm", "Mapping .rodata section...\n");
     for (uint64_t roData = rodata_start; roData < rodata_end; roData += PMM_PAGE_SIZE)
         vmm_map(vmm_kernel_pm, roData, roData - kvirtaddr + kphysaddr,
-                1 | ((uint64_t)1 << 63));
+                VMM_PRESENT | VMM_NX);
 
     logln(info, "vmm", "Mapping .data section...\n");
     for (uint64_t data = data_start; data < data_end; data += PMM_PAGE_SIZE)
         vmm_map(vmm_kernel_pm, data, data - kvirtaddr + kphysaddr,
-                1 | 2 | ((uint64_t)1 << 63));
+                VMM_PRESENT | VMM_WRITABLE | VMM_NX);
 
     logln(info, "vmm", "Mapping address from 0x0 to 0x100000000...\n");
     for (uint64_t gb4 = 0; gb4 < 0x100000000; gb4 += PMM_PAGE_SIZE) {
-        vmm_map(vmm_kernel_pm, gb4, gb4, 1 | 2);
-        vmm_map(vmm_kernel_pm, (uint64_t)HIGHER_HALF(gb4), gb4, 1 | 2);
+        vmm_map(vmm_kernel_pm, gb4, gb4, VMM_PRESENT | VMM_WRITABLE);
+        vmm_map(vmm_kernel_pm, (uint64_t)HIGHER_HALF(gb4), gb4, VMM_PRESENT | VMM_WRITABLE);
     }
 
     vmm_load_pagemap(vmm_kernel_pm);
@@ -112,35 +112,42 @@ void vmm_load_pagemap(pagemap_t *pm) {
     if (!pm->toplevel)
         return;
 
-    logln(progress, "vmm", "thing!\n");
+    logln(progress, "vmm", "thing! %p %p %llx\n", (uint64_t)pm->toplevel, (uint64_t)PHYSICAL((uint64_t)pm->toplevel), pmm_hhdm_off);
     vmm_current_pm = pm;
     __asm__ volatile("mov %0, %%cr3" : : "r"(PHYSICAL(pm->toplevel)) : "memory");
 }
 
+static uint64_t *__vmm_get_next_lvl(uint64_t *level, uint64_t entry) {
+  if (level[entry] & 1)
+    return HIGHER_HALF(PTE_GET_ADDR(level[entry]));
+  uint64_t *pml = HIGHER_HALF(pmm_request_page());
+  memset(pml, 0, PMM_PAGE_SIZE);
+  level[entry] = (uint64_t)PHYSICAL(pml) | 1 | 2 | 3;
+  return pml;
+}
+
 void vmm_map(pagemap_t *pm, uint64_t vaddr, uint64_t paddr, uint64_t flags) {
+  uint64_t pml1_entry = (vaddr >> 12) & 0x1ff;
+  uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
+  uint64_t pml3_entry = (vaddr >> 30) & 0x1ff;
+  uint64_t pml4_entry = (vaddr >> 39) & 0x1ff;
 
-    uint64_t pml1_idx = (vaddr & (uint64_t)0x1ff << 12) >> 12;
-    uint64_t pml2_idx = (vaddr & (uint64_t)0x1ff << 21) >> 21;
-    uint64_t pml3_idx = (vaddr & (uint64_t)0x1ff << 30) >> 30;
-    uint64_t pml4_idx = (vaddr & (uint64_t)0x1ff << 39) >> 39;
+  uint64_t *pml3 = __vmm_get_next_lvl(pm->toplevel, pml4_entry);
+  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry);
+  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry);
 
-    if (!(pm->toplevel[pml4_idx] & 1))
-    {
-        pm->toplevel[pml4_idx] = (uint64_t)pmm_request_page() | flags;
-    }
+  pml1[pml1_entry] = paddr | flags;
+}
 
-    uint64_t *pml3_table = (uint64_t *)HIGHER_HALF(pm->toplevel[pml4_idx] & 0x000FFFFFFFFFF000);
-    if (!(pml3_table[pml3_idx] & 1))
-    {
-        pml3_table[pml3_idx] = (uint64_t)pmm_request_page() | flags;
-    }
+void vmm_unmap(pagemap_t *pm, uint64_t vaddr) {
+  uint64_t pml1_entry = (vaddr >> 12) & 0x1ff;
+  uint64_t pml2_entry = (vaddr >> 21) & 0x1ff;
+  uint64_t pml3_entry = (vaddr >> 30) & 0x1ff;
+  uint64_t pml4_entry = (vaddr >> 39) & 0x1ff;
 
-    uint64_t *pml2_table = (uint64_t *)HIGHER_HALF(pml3_table[pml3_idx] & 0x000FFFFFFFFFF000);
-    if (!(pml2_table[pml2_idx] & 1))
-    {
-        pml2_table[pml2_idx] = (uint64_t)pmm_request_page() | flags;
-    }
+  uint64_t *pml3 = __vmm_get_next_lvl(pm->toplevel, pml4_entry);
+  uint64_t *pml2 = __vmm_get_next_lvl(pml3, pml3_entry);
+  uint64_t *pml1 = __vmm_get_next_lvl(pml2, pml2_entry);
 
-    uint64_t *pml1_table = (uint64_t *)HIGHER_HALF(pml2_table[pml2_idx] & 0x000FFFFFFFFFF000);
-    pml1_table[pml1_idx] = paddr | flags;
+  pml1[pml1_entry] = 0;
 }

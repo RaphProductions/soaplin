@@ -37,7 +37,7 @@ run: $(IMAGE_NAME).iso
 	qemu-system-x86_64 \
 		-M q35 \
 		-cdrom $(IMAGE_NAME).iso \
-		-boot d \
+		-boot d -accel kvm \
 		$(QEMUFLAGS) -serial stdio
 
 .PHONY: run-uefi

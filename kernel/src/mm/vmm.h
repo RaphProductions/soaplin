@@ -8,7 +8,7 @@
 
 #define VMM_PRESENT 1
 #define VMM_WRITABLE 2
-#define VMM_NX (1ull << 63)
+#define VMM_NX (1ull << 63) // No eXecute flag - Mainly used to prevent unwanted code execution.
 #define VMM_USER 4
 
 typedef char sym[];

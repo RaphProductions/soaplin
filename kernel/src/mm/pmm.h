@@ -9,7 +9,7 @@
 #define ALIGN_DOWN(x, y) (((uint64_t)(x) / (uint64_t)(y)) * (uint64_t)(y))
 
 #define HIGHER_HALF(x) ((void*)((uint64_t)x) + pmm_hhdm_off)
-#define PHYSICAL(x) ((void*)((uint64_t)x) + pmm_hhdm_off)
+#define PHYSICAL(x) ((void*)((uint64_t)x) - pmm_hhdm_off)
 
 extern uint64_t pmm_hhdm_off;
 
