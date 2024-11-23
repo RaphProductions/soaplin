@@ -1,3 +1,4 @@
+#include "mm/vmm.h"
 #include "sys/log.h"
 #include <sys/arch/x86_64/idt.h>
 
@@ -15,10 +16,23 @@ char *gdt_seg_desc[65] = {
     "User-mode data segment" // 0x40
 };
 
-char *err_msg[2] = {
+char *err_msg[5] = {
     "kmode_cpu_exception",
-    "out_of_memory"
+    "out_of_memory",
+    "Unknown",
+    "Unknown",
+    "Unknown"
 };
+
+static void __panic_pf_err_parse(uint64_t err_code) {
+    logln(panic_lg, "kernel", "--- Page Fault Details:\n");
+    logln(panic_lg, "kernel", "Error Code: 0x%.16llx\n", err_code);
+    logln(panic_lg, "kernel", " - %s", (err_code & 1) ? "Protection violation\n" : "Non-present page\n");
+    logln(panic_lg, "kernel", " - %s", (err_code & 2) ? "Write access\n" : "Read access\n");
+    logln(panic_lg, "kernel", " - %s", (err_code & 4) ? "User mode\n" : "Supervisor mode\n");
+    logln(panic_lg, "kernel", " - %s", (err_code & 8) ? "Reserved bit set\n" : "No reserved bit violation\n");
+    logln(panic_lg, "kernel", " - %s", (err_code & 16) ? "Instruction fetch\n" : "Data access\n");
+}
 
 void panic(int err, registers_t *regs) {
     
@@ -42,6 +56,9 @@ void panic(int err, registers_t *regs) {
             logln(panic_lg, "kernel", "RCX: %lx, RBX: %lx, RDX: %lx, RSP: %lx, RBP: %lx, RIP: %lx\n", regs->rcx, regs->rbx, regs->rdx, regs->rsp, regs->rbp, regs->rip);
             logln(panic_lg, "kernel", "CS: %x, SS: %x, RFLAGS: %d, INT: %d, ERR: %lx\n", regs->cs, regs->ss, regs->rflags, regs->int_no, regs->err_code);
         
+            if (regs->int_no == 14)
+                __panic_pf_err_parse(regs->err_code);
+
             logln(panic_lg, "kernel", "--- Stackframe\n");
             stackframe_t *stk;
             __asm__ volatile ("mov %%rbp, %0" : "=r"(stk));

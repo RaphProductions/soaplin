@@ -53,6 +53,13 @@ pagemap_t *vmm_alloc_pm() {
     return pm;
 }
 
+void vmm_release_pm(pagemap_t *pm) {
+    memset(pm->toplevel, 0, PMM_PAGE_SIZE);
+    memset(pm, 0, PMM_PAGE_SIZE);
+    pmm_free_page(pm->toplevel);
+    pmm_free_page(pm);
+}
+
 void vmm_init() {
     if (pmrq.response->mode != LIMINE_PAGING_MODE_X86_64_4LVL) {
         logln(panic_lg, "vmm", "Soaplin only supports 4-level paging!\n");
@@ -112,7 +119,6 @@ void vmm_load_pagemap(pagemap_t *pm) {
     if (!pm->toplevel)
         return;
 
-    logln(progress, "vmm", "thing! %p %p %llx\n", (uint64_t)pm->toplevel, (uint64_t)PHYSICAL((uint64_t)pm->toplevel), pmm_hhdm_off);
     vmm_current_pm = pm;
     __asm__ volatile("mov %0, %%cr3" : : "r"(PHYSICAL(pm->toplevel)) : "memory");
 }

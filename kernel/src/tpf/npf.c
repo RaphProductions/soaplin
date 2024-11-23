@@ -2,6 +2,9 @@
 // This code is part of the Soaplin kernel and is licensed under the terms of
 // the MIT License.
 
+// TODO: nanoprintf seems to cause a kernel-mode general protection fault.
+//       so replace nanoprintf with a home-made printf
+
 #define NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS 1
 #define NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS 1
 #define NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS 1

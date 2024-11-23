@@ -80,6 +80,7 @@ void acpi_init() {
 
     // Try finding a FADT
 
+
 #ifndef SOAPLIN_FORCE_ACPI
     logln(err, "kinit stage 1", "ACPI is badly implemented as of now. Please update\n");
     logln(err, "kinit stage 1", "the kernel, or if it's already to the latest,\n");

@@ -3,6 +3,7 @@
 // the MIT License.
 
 #include "dev/serio.h"
+#include "sys/lock/spinlock.h"
 #include <dev/tty.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -14,20 +15,23 @@ uint32_t fg_lt[] = {0xf7d514, 0x147ef7, 0x750202, 0xd10000, 0x027512};
 
 char *nm_lt[] = {"warn", "info", "panic", "err", "progress"};
 
-//static spinlock logger_lock;
+static spinlock logger_lock = { 0 };
+
+extern int pit_millis;
+extern int pit_secs;
 
 void logln(logtype lt, char *cmp, char *msg, ...) {
-  //spinlock_acquire(
-  //  &logger_lock); // We need to have a spinlock to prevent the logger from breaking
+  spinlock_acquire(
+    &logger_lock); // We need to have a spinlock to prevent the logger from breaking
 
-  tty_printf("[0.000000] %s - ", cmp);
+  tty_printf("[%d.%d] %s - ", pit_secs, pit_millis, cmp);
   tty_set_fg(fg_lt[lt]);
   tty_printf(nm_lt[lt]);
   tty_reset_col();
 
   tty_print(": ", 2);
 
-  serio_printf("[0.000000] %s - %s: ", cmp, nm_lt[lt]);
+  serio_printf("[%d.%d] %s - %s: ", pit_secs, pit_millis, cmp, nm_lt[lt]);
 
   char buf[2048];
   va_list lst;
@@ -41,5 +45,5 @@ void logln(logtype lt, char *cmp, char *msg, ...) {
   tty_print(buf, i);
   serio_print(buf, i);
 
-  //spinlock_release(&logger_lock);
+  spinlock_release(&logger_lock);
 }
